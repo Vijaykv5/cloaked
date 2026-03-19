@@ -17,13 +17,18 @@ export function UploadStep({
   onContinue: () => void;
 }) {
   return (
-    <section className="w-full space-y-4 transition-all duration-200">
-      <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-900">Upload Payroll CSV</h2>
-        <p className="mt-1 text-sm text-gray-600">Headers: name, wallet, amount, currency</p>
+    <section className="w-full space-y-3 transition-all duration-200">
+      <div className="rounded-xl bg-white p-4 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">Upload Payroll CSV</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Required: <span className="font-mono">name,wallet,amount,currency</span>
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          Optional: <span className="font-mono">payout_rail,test_tx_required</span> where payout_rail can be ZEC or USDC_NEAR_INTENT.
+        </p>
 
-        <label className="mt-4 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-10 text-center transition-all duration-200 hover:border-gray-400">
-          <span className="text-sm text-gray-600">Choose a .csv file</span>
+        <label className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-3 py-7 text-center transition-all duration-200 hover:border-gray-400">
+          <span className="text-xs text-gray-600">Choose a .csv file</span>
           <input
             type="file"
             accept=".csv,text/csv"
