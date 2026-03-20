@@ -1,40 +1,50 @@
-# ZEC Payroll 
+# Cloaked
 
-ZEC Payroll is a small payroll tool for paying teams with private Zcash transactions.
+Cloaked is a privacy-first payroll runner built for hackathon speed and real operator workflows.
 
-Upload a CSV, review the batch, run required test payments, then generate a ZIP-321 multi-payment payload for signing in Zodl. If someone needs USDC instead, the app prepares a NEAR intent payload for that leg.
+It lets an admin create encrypted payroll vaults in-browser, import or manually add employees, generate payout payloads, and track execution status in a transaction history dashboard.
 
-## Demo video
+## Demo
 
 [![Watch the demo](https://img.youtube.com/vi/KeZcKMTUW8E/maxresdefault.jpg)](https://youtu.be/KeZcKMTUW8E)
 
-## What this demo does
+## What it does
 
-- Imports payroll rows from CSV (`ZEC`, `USD`, `USDC` amounts)
-- Enforces test-transaction checks before full payout
-- Calculates biweekly payout timing and due status
-- Generates ZIP-321 multi-pay output for ZEC recipients
-- Generates NEAR intent payload for USDC recipients
-- Encrypts payroll batch data in the browser before storing on server
+- Creates an encrypted browser vault gated by passphrase
+- Supports two data-entry modes:
+  - Import CSV
+  - Add employee manually
+- Validates payroll rows before generation
+- Supports payout rails:
+  - ZEC batch URI generation
+  - USDC NEAR intent generation
+- Generates payouts in two execution styles:
+  - One-at-a-time URIs with QR per recipient
+  - Single batch URI
+- Stores encrypted batch metadata on server
+- Tracks payout executions with status, txid, and paid timestamp
+- Includes a transaction history page with filters and summary metrics
 
-## Product flow
+## Core flow
 
-1. Start payroll
-2. Upload CSV (or click **Load Sample CSV**)
-3. Review rows and admin settings
-4. Mark required test tx rows as done
-5. Generate batch
-6. Use ZIP-321 QR/URI for ZEC, NEAR intent for USDC
+1. Click `Create Payroll Batch`
+2. Unlock existing vault or create a new one
+3. Add employees manually or import CSV
+4. Review, validate, and generate batch
+5. Use QR/URI for execution (single or batch mode)
+6. Mark paid with txid and track progress in history
 
 ## CSV format
 
 Required headers:
+
 - `name`
 - `wallet`
 - `amount`
 - `currency`
 
 Optional headers:
+
 - `payout_rail` (`ZEC` or `USDC_NEAR_INTENT`)
 - `test_tx_required` (`true` / `false`, defaults to `true`)
 
@@ -42,12 +52,37 @@ Example:
 
 ```csv
 name,wallet,amount,currency,payout_rail,test_tx_required
-Vijay,u1...,100,USD,ZEC,true
-Arjun,zs1...,0.5,ZEC,ZEC,true
+Alice,zs1...,100,USD,ZEC,true
+Bob,u1...,0.5,ZEC,ZEC,true
 Nina,nina.near,250,USDC,USDC_NEAR_INTENT,false
 ```
 
-## Run locally
+## Tech stack
+
+- Next.js (App Router) + React + TypeScript
+- Tailwind CSS
+- Prisma + PostgreSQL
+- Client-side crypto with Web Crypto API (PBKDF2 + AES-GCM)
+
+## Security model
+
+- Vault passphrase is entered and used in-browser
+- Vault marker data is encrypted in localStorage
+- Payroll payloads are encrypted client-side before API storage
+- Server stores ciphertext + IV + salt + minimal metadata
+
+## Project structure
+
+- `app/page.tsx`: main payroll flow
+- `app/history/page.tsx`: transaction history dashboard
+- `app/api/batches/route.ts`: encrypted batch persistence
+- `app/api/executions/route.ts`: payout execution listing/creation
+- `app/api/executions/[id]/route.ts`: row status/txid updates
+- `hooks/usePayroll.ts`: orchestration and UI flow state
+- `utils/payroll.ts`: validation and URI generation helpers
+- `utils/crypto.ts`: encryption/decryption helpers
+
+## Local setup
 
 ```bash
 npm install
@@ -56,42 +91,20 @@ npm run prisma:migrate
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+Open: `http://localhost:3000`
 
-## Environment
+## Environment variables
 
-Set either one (both supported):
+Use either:
 
 - `DATABASE_URL`
 - `DB_URL`
 
-Example `.env`:
+Example:
 
 ```env
 DATABASE_URL=postgresql://...
 ```
-
-## Database (Neon + Prisma)
-
-- Prisma schema: `prisma/schema.prisma`
-- Migrations: `prisma/migrations`
-- API storage endpoint: `app/api/batches/route.ts`
-
-The server stores encrypted payload fields plus minimal metadata only.
-
-## Encryption model
-
-- Key derivation: PBKDF2 (client-side)
-- Encryption: AES-GCM (client-side)
-- Server storage: ciphertext + IV + salt + schedule metadata
-
-Plaintext payroll rows are not persisted server-side.
-
-## Notes for judges / demo viewers
-
-- ZIP-321 output is generated from CSV rows for multi-recipient ZEC payouts.
-- Wallet support for full multi-pay parsing can vary by scanner implementation.
-- USD/ZEC conversion currently uses a fixed demo rate (`1 ZEC = 50 USD`).
 
 ## Useful commands
 
