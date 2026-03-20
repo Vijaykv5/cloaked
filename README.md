@@ -4,6 +4,10 @@ ZEC Payroll is a small payroll tool for paying teams with private Zcash transact
 
 Upload a CSV, review the batch, run required test payments, then generate a ZIP-321 multi-payment payload for signing in Zodl. If someone needs USDC instead, the app prepares a NEAR intent payload for that leg.
 
+## Demo video
+
+[![Watch the demo](https://img.youtube.com/vi/KeZcKMTUW8E/maxresdefault.jpg)](https://youtu.be/KeZcKMTUW8E)
+
 ## What this demo does
 
 - Imports payroll rows from CSV (`ZEC`, `USD`, `USDC` amounts)
