@@ -23,6 +23,59 @@ const DEFAULT_SETTINGS: PayrollSettings = {
   testTxAmountZec: 0.0001,
 };
 
+const PAYOUT_STATUS_STORAGE_KEY = "zecpayroll:payout-status:v1";
+
+type PaidStatusMap = Record<string, { txid: string; paidAt: string }>;
+
+function readPaidStatusMap(): PaidStatusMap {
+  if (typeof window === "undefined") {
+    return {};
+  }
+  try {
+    const raw = window.localStorage.getItem(PAYOUT_STATUS_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object") {
+      return {};
+    }
+    return parsed as PaidStatusMap;
+  } catch {
+    return {};
+  }
+}
+
+function writePaidStatusMap(map: PaidStatusMap) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(PAYOUT_STATUS_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    // Ignore storage errors in demo mode.
+  }
+}
+
+function applyPaidStatus(records: EncryptedBatchRecord[]): EncryptedBatchRecord[] {
+  const paidMap = readPaidStatusMap();
+  return records.map((record) => {
+    const paidStatus = paidMap[record.id];
+    if (!paidStatus) {
+      return {
+        ...record,
+        payoutStatus: "pending",
+      };
+    }
+    return {
+      ...record,
+      payoutStatus: "paid",
+      txid: paidStatus.txid,
+      paidAt: paidStatus.paidAt,
+    };
+  });
+}
+
 export function usePayroll() {
   const [step, setStep] = useState<Step>("landing");
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -36,6 +89,10 @@ export function usePayroll() {
   const [passphrase, setPassphrase] = useState("");
   const [savedRecords, setSavedRecords] = useState<EncryptedBatchRecord[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeRecordId, setActiveRecordId] = useState("");
+  const [paidTxid, setPaidTxid] = useState("");
+  const [markPaidError, setMarkPaidError] = useState("");
+  const [markPaidSuccess, setMarkPaidSuccess] = useState("");
 
   const validationErrors = useMemo(() => validatePayments(payments), [payments]);
   const pendingTests = useMemo(() => hasPendingTestTransactions(payments), [payments]);
@@ -44,6 +101,14 @@ export function usePayroll() {
     void fetchSavedRecords();
   }, []);
 
+  useEffect(() => {
+    const current = savedRecords.find((record) => record.id === activeRecordId);
+    if (!current) {
+      return;
+    }
+    setPaidTxid(current.txid ?? "");
+  }, [activeRecordId, savedRecords]);
+
   async function fetchSavedRecords() {
     try {
       const response = await fetch("/api/batches");
@@ -51,7 +116,11 @@ export function usePayroll() {
         return;
       }
       const payload = (await response.json()) as { records?: EncryptedBatchRecord[] };
-      setSavedRecords(payload.records ?? []);
+      const records = applyPaidStatus(payload.records ?? []);
+      setSavedRecords(records);
+      if (records.length > 0) {
+        setActiveRecordId((current) => current || records[0].id);
+      }
     } catch {
       // Ignore fetch errors in demo mode.
     }
@@ -113,6 +182,8 @@ export function usePayroll() {
     setGenerationError("");
     setCopyZipState("idle");
     setCopyNearState("idle");
+    setMarkPaidError("");
+    setMarkPaidSuccess("");
   }
 
   function applyParsedRows(data: RawPayment[]) {
@@ -202,7 +273,12 @@ export function usePayroll() {
 
       const payload = (await response.json()) as { record?: EncryptedBatchRecord };
       if (payload.record) {
-        setSavedRecords((current) => [payload.record as EncryptedBatchRecord, ...current]);
+        const enrichedRecord = applyPaidStatus([payload.record as EncryptedBatchRecord])[0];
+        setSavedRecords((current) => [enrichedRecord, ...current]);
+        setActiveRecordId(enrichedRecord.id);
+        setPaidTxid("");
+        setMarkPaidError("");
+        setMarkPaidSuccess("");
       }
 
       setBatch(generatedBatch);
@@ -240,6 +316,59 @@ export function usePayroll() {
     }
   }
 
+  function selectedRecord(): EncryptedBatchRecord | null {
+    if (!activeRecordId) {
+      return savedRecords[0] ?? null;
+    }
+    return savedRecords.find((record) => record.id === activeRecordId) ?? savedRecords[0] ?? null;
+  }
+
+  function isLikelyTxid(value: string): boolean {
+    return /^[a-fA-F0-9]{64}$/.test(value.trim());
+  }
+
+  function markRecordPaid() {
+    setMarkPaidError("");
+    setMarkPaidSuccess("");
+
+    const target = selectedRecord();
+    if (!target) {
+      setMarkPaidError("No batch record available to mark as paid.");
+      return;
+    }
+
+    if (!isLikelyTxid(paidTxid)) {
+      setMarkPaidError("Enter a valid Zcash txid (64 hex characters).");
+      return;
+    }
+
+    const normalizedTxid = paidTxid.trim().toLowerCase();
+    const paidAt = new Date().toISOString();
+    const currentMap = readPaidStatusMap();
+    const nextMap: PaidStatusMap = {
+      ...currentMap,
+      [target.id]: {
+        txid: normalizedTxid,
+        paidAt,
+      },
+    };
+    writePaidStatusMap(nextMap);
+
+    setSavedRecords((current) =>
+      current.map((record) =>
+        record.id === target.id
+          ? {
+              ...record,
+              payoutStatus: "paid",
+              txid: normalizedTxid,
+              paidAt,
+            }
+          : record,
+      ),
+    );
+    setMarkPaidSuccess("Batch marked paid.");
+  }
+
   return {
     step,
     setStep,
@@ -256,6 +385,13 @@ export function usePayroll() {
     setPassphrase,
     savedRecords,
     isSaving,
+    activeRecordId,
+    setActiveRecordId,
+    paidTxid,
+    setPaidTxid,
+    markPaidError,
+    markPaidSuccess,
+    selectedRecord: selectedRecord(),
     validationErrors,
     pendingTests,
     handleCsvUpload,
@@ -264,6 +400,7 @@ export function usePayroll() {
     handleGeneratePayroll,
     handleCopyZipUri,
     handleCopyNearIntent,
+    markRecordPaid,
     resetCopyState: () => {
       setCopyZipState("idle");
       setCopyNearState("idle");

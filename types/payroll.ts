@@ -63,4 +63,7 @@ export type EncryptedBatchRecord = {
   nextPayoutDate: string;
   notificationDue: boolean;
   encrypted: EncryptedPayload;
+  payoutStatus?: "pending" | "paid";
+  txid?: string;
+  paidAt?: string;
 };

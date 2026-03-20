@@ -4,14 +4,17 @@ import { PrimaryButton } from "./ui";
 
 type ZecPriceState = {
   usd: number | null;
-  loading: boolean;
 };
 
 export function LandingStep({ onStart }: { onStart: () => void }) {
+  const [mounted, setMounted] = useState(false);
   const [price, setPrice] = useState<ZecPriceState>({
     usd: null,
-    loading: true,
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -36,16 +39,10 @@ export function LandingStep({ onStart }: { onStart: () => void }) {
         if (active) {
           setPrice({
             usd,
-            loading: false,
           });
         }
       } catch {
-        if (active) {
-          setPrice((current) => ({
-            usd: current.usd,
-            loading: false,
-          }));
-        }
+        // Ignore fetch errors and keep badge hidden.
       }
     }
 
@@ -61,25 +58,31 @@ export function LandingStep({ onStart }: { onStart: () => void }) {
   }, []);
 
   const priceLabel = useMemo(() => {
-    if (price.loading) {
-      return "Loading ZEC price...";
-    }
     if (price.usd === null) {
-      return "ZEC price unavailable";
+      return "";
     }
     return `ZEC $${price.usd.toFixed(2)}`;
-  }, [price.loading, price.usd]);
+  }, [price.usd]);
 
   return (
     <section className="w-full space-y-5 text-center transition-all duration-200">
-      <p className="text-sm font-semibold uppercase tracking-[0.24em] text-gray-500">ZEC Payroll</p>
-      <h1 className="text-5xl font-semibold tracking-tight text-gray-900">Shielded Payroll Runner</h1>
-      <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-gray-300 bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm backdrop-blur">
-        <Image src="/logo.webp" alt="ZEC logo" width={16} height={16} className="rounded-full" />
-        {priceLabel}
-      </div>
-      <p className="text-lg text-gray-600">Biweekly ZIP-321 payroll from CSV, encrypted end to end.</p>
-      <PrimaryButton onClick={onStart}>Create Payroll Batch</PrimaryButton>
+      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[var(--ink-2)]">Private team payouts</p>
+      <h1 className="text-4xl font-semibold tracking-tight text-[var(--ink-0)] sm:text-5xl">Shielded Payroll Runner</h1>
+      {mounted && priceLabel ? (
+        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/90 px-4 py-2 text-sm font-semibold text-[var(--ink-1)] shadow-sm backdrop-blur">
+          <Image src="/logo.webp" alt="ZEC logo" width={16} height={16} className="rounded-full" />
+          {priceLabel}
+        </div>
+      ) : null}
+      <p className="mx-auto max-w-2xl text-base text-[var(--ink-2)] sm:text-lg">
+        Import CSV payouts, enforce test transactions, then produce ZIP-321 and NEAR intent payloads with encrypted server records.
+      </p>
+      <PrimaryButton
+        onClick={onStart}
+        className="mx-auto min-w-72 bg-gradient-to-b from-[var(--accent)] to-[var(--accent-strong)] px-8 py-4 text-lg font-bold tracking-[0.02em] shadow-[0_14px_28px_rgba(17,53,38,0.22)] hover:shadow-[0_18px_34px_rgba(17,53,38,0.28)]"
+      >
+        Create Payroll Batch
+      </PrimaryButton>
     </section>
   );
 }

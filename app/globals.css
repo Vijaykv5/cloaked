@@ -1,2 +1,63 @@
 @import "tailwindcss";
 
+:root {
+  --bg-0: #f3f5ef;
+  --bg-1: #e7ebdf;
+  --bg-2: #d8e0cd;
+  --ink-0: #1d2b24;
+  --ink-1: #2a3c33;
+  --ink-2: #51645c;
+  --line: #c6d1c2;
+  --surface: rgba(255, 255, 255, 0.84);
+  --surface-strong: rgba(255, 255, 255, 0.95);
+  --accent: #184f3a;
+  --accent-strong: #113526;
+}
+
+body {
+  color: var(--ink-0);
+  font-family: var(--font-heading), "Avenir Next", "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 12% 15%, #ffffff 0%, rgba(255, 255, 255, 0) 35%),
+    radial-gradient(circle at 84% 8%, #e8efe2 0%, rgba(232, 239, 226, 0) 42%),
+    linear-gradient(180deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+}
+
+.font-mono {
+  font-family: var(--font-mono), "SFMono-Regular", "Consolas", monospace;
+}
+
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 15px 35px rgba(21, 41, 33, 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.soft-panel {
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+}
+
+.step-enter {
+  animation: step-enter 380ms ease-out;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

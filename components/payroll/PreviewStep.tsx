@@ -36,8 +36,8 @@ export function PreviewStep({
 
   return (
     <section className="w-full space-y-3 transition-all duration-200">
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">Payroll Preview</h2>
+      <div className="soft-panel rounded-2xl p-4">
+        <h2 className="text-lg font-semibold text-[var(--ink-0)]">Payroll Preview</h2>
         <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
           <SummaryCard label="Total ZEC" value={`${totalZec.toFixed(8)} ZEC`} />
           <SummaryCard label="Recipients" value={payments.length} />
@@ -46,10 +46,10 @@ export function PreviewStep({
         </div>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm">
-        <h3 className="text-sm font-semibold text-gray-900">Admin Settings</h3>
+      <div className="soft-panel rounded-2xl p-4">
+        <h3 className="text-sm font-semibold text-[var(--ink-0)]">Admin Settings</h3>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <label className="space-y-1 text-xs text-gray-600">
+          <label className="space-y-1 text-xs text-[var(--ink-2)]">
             Biweekly anchor date
             <input
               type="date"
@@ -60,11 +60,11 @@ export function PreviewStep({
                   biweeklyAnchorDate: event.target.value,
                 })
               }
-              className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-800"
+              className="w-full rounded-lg border border-[var(--line)] bg-white px-2.5 py-1.5 text-xs text-[var(--ink-0)]"
             />
           </label>
 
-          <label className="space-y-1 text-xs text-gray-600">
+          <label className="space-y-1 text-xs text-[var(--ink-2)]">
             Test tx amount (ZEC)
             <input
               type="number"
@@ -77,31 +77,31 @@ export function PreviewStep({
                   testTxAmountZec: Number(event.target.value),
                 })
               }
-              className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-800"
+              className="w-full rounded-lg border border-[var(--line)] bg-white px-2.5 py-1.5 text-xs text-[var(--ink-0)]"
             />
           </label>
         </div>
 
-        <label className="mt-2 block space-y-1 text-xs text-gray-600">
+        <label className="mt-2 block space-y-1 text-xs text-[var(--ink-2)]">
           Encryption passphrase (not sent to server)
           <input
             type="password"
             value={passphrase}
             onChange={(event) => onSetPassphrase(event.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs text-gray-800"
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-2.5 py-1.5 text-xs text-[var(--ink-0)]"
             placeholder="At least 8 characters"
           />
         </label>
 
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-[var(--ink-2)]">
           Every row with test transactions enabled must be marked done before full payout batch generation.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+      <div className="soft-panel overflow-hidden rounded-2xl">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-xs">
-            <thead className="bg-gray-50 text-gray-600">
+            <thead className="bg-[#edf3ea] text-[var(--ink-2)]">
               <tr>
                 <th className="px-3 py-2 font-medium">Name</th>
                 <th className="px-3 py-2 font-medium">Recipient</th>
@@ -111,21 +111,21 @@ export function PreviewStep({
                 <th className="px-3 py-2 font-medium">Test Tx Done</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-[#e4ebe1] bg-white/80">
               {payments.map((payment) => (
                 <tr key={payment.id}>
-                  <td className="px-3 py-2 text-gray-900">{payment.name}</td>
-                  <td className="px-3 py-2 font-mono text-xs text-gray-700">{maskAddress(payment.wallet)}</td>
-                  <td className="px-3 py-2 text-gray-800">
+                  <td className="px-3 py-2 text-[var(--ink-0)]">{payment.name}</td>
+                  <td className="px-3 py-2 font-mono text-xs text-[var(--ink-1)]">{maskAddress(payment.wallet)}</td>
+                  <td className="px-3 py-2 text-[var(--ink-1)]">
                     {payment.amount} {payment.currency}
                   </td>
-                  <td className="px-3 py-2 text-gray-800">{payment.payoutRail}</td>
-                  <td className="px-3 py-2 text-gray-900">
+                  <td className="px-3 py-2 text-[var(--ink-1)]">{payment.payoutRail}</td>
+                  <td className="px-3 py-2 text-[var(--ink-0)]">
                     {payment.payoutRail === "ZEC"
                       ? `${convertToZec(payment.amount, payment.currency).toFixed(8)} ZEC`
                       : `${convertToUsd(payment.amount, payment.currency).toFixed(2)} USDC`}
                   </td>
-                  <td className="px-3 py-2 text-gray-800">
+                  <td className="px-3 py-2 text-[var(--ink-1)]">
                     {payment.testTxRequired ? (
                       <label className="inline-flex cursor-pointer items-center gap-2 text-xs">
                         <input
@@ -136,7 +136,7 @@ export function PreviewStep({
                         done
                       </label>
                     ) : (
-                      <span className="text-xs text-gray-500">not required</span>
+                      <span className="text-xs text-[var(--ink-2)]">not required</span>
                     )}
                   </td>
                 </tr>
@@ -157,7 +157,7 @@ export function PreviewStep({
       )}
 
       {pendingTests && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5">
+        <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-2.5">
           <p className="text-xs text-amber-700">Some test transactions are still pending.</p>
         </div>
       )}

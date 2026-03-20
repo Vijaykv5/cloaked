@@ -23,6 +23,13 @@ export default function Home() {
     setPassphrase,
     savedRecords,
     isSaving,
+    activeRecordId,
+    setActiveRecordId,
+    paidTxid,
+    setPaidTxid,
+    markPaidError,
+    markPaidSuccess,
+    selectedRecord,
     validationErrors,
     pendingTests,
     handleCsvUpload,
@@ -31,13 +38,30 @@ export default function Home() {
     handleGeneratePayroll,
     handleCopyZipUri,
     handleCopyNearIntent,
+    markRecordPaid,
     resetCopyState,
   } = usePayroll();
+  const shellClassName =
+    step === "landing"
+      ? "step-enter w-full max-w-3xl p-4 sm:p-6"
+      : "step-enter glass-panel w-full max-w-3xl rounded-3xl p-4 sm:p-6";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 px-4 py-8">
+    <main className="relative min-h-screen overflow-hidden px-4 py-8 sm:px-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -left-20 top-8 h-56 w-56 rounded-full bg-white/45 blur-3xl"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 bottom-10 h-72 w-72 rounded-full bg-[#d6e5d8]/60 blur-3xl"
+      />
+
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl flex-col items-center justify-center transition-all duration-200">
-        <div className="w-full max-w-3xl">
+        <div className={shellClassName}>
+          {/* <p className="mb-4 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-2)]">
+            ZEC Payroll Runner
+          </p> */}
           {step === "landing" && <LandingStep onStart={() => setStep("upload")} />}
 
           {step === "upload" && (
@@ -80,6 +104,11 @@ export default function Home() {
               copyZipState={copyZipState}
               copyNearState={copyNearState}
               records={savedRecords}
+              activeRecordId={activeRecordId}
+              selectedRecord={selectedRecord}
+              paidTxid={paidTxid}
+              markPaidError={markPaidError}
+              markPaidSuccess={markPaidSuccess}
               onBack={() => {
                 resetCopyState();
                 setStep("preview");
@@ -90,6 +119,9 @@ export default function Home() {
               onCopyNear={() => {
                 void handleCopyNearIntent();
               }}
+              onSelectRecord={setActiveRecordId}
+              onPaidTxidChange={setPaidTxid}
+              onMarkPaid={markRecordPaid}
               onOpenZip={() => {
                 if (batch.zcashUri) {
                   window.location.href = batch.zcashUri;

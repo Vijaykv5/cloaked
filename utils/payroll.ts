@@ -11,6 +11,24 @@ import type {
 const USD_PER_ZEC = 50;
 const DAYS_PER_PAYOUT = 14;
 
+function memoToBase64url(memo: string): string {
+  const bytes = new TextEncoder().encode(memo);
+
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(bytes)
+      .toString("base64")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+  }
+
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 1) {
+    binary += String.fromCharCode(bytes[index]);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 function parseCurrency(value: string | undefined): Currency {
   const normalized = value?.trim().toUpperCase();
   if (normalized === "USD" || normalized === "USDC") {
@@ -158,6 +176,7 @@ export function generateZip321(payments: Payment[]): string {
     .map((payment) => ({
       address: payment.wallet,
       amount: convertToZec(payment.amount, payment.currency).toFixed(8),
+      memo: payment.name ? `Payroll ${payment.name}` : "",
     }));
 
   if (zipPayments.length === 0) {
@@ -167,11 +186,13 @@ export function generateZip321(payments: Payment[]): string {
   const first = zipPayments[0];
   const params = [
     `amount=${encodeURIComponent(first.amount)}`,
+    ...(first.memo ? [`memo=${memoToBase64url(first.memo)}`] : []),
     ...zipPayments.slice(1).flatMap((payment, idx) => {
       const suffix = `.${idx + 1}`;
       return [
         `address${suffix}=${encodeURIComponent(payment.address)}`,
         `amount${suffix}=${encodeURIComponent(payment.amount)}`,
+        ...(payment.memo ? [`memo${suffix}=${memoToBase64url(payment.memo)}`] : []),
       ];
     }),
   ].join("&");
